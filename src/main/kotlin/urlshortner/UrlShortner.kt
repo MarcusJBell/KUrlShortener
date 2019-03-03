@@ -4,6 +4,7 @@ import io.ktor.application.ApplicationCall
 import io.ktor.application.call
 import io.ktor.features.origin
 import io.ktor.html.respondHtml
+import io.ktor.http.HttpStatusCode
 import io.ktor.request.document
 import io.ktor.request.host
 import io.ktor.response.respondRedirect
@@ -12,20 +13,19 @@ import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import kotlinx.html.*
+import urlshortner.page.MainPage
 
 fun main() {
     UrlDatabase.init()
     UrlDatabase.createUrl()
 
     // Start server using etty as backend
-    val server = embeddedServer(Netty, host = "192.168.254.33") {
+    val server = embeddedServer(Netty) {
         routing {
             // On / just direct to main page
             get("/") {
                 println(call.request.origin.remoteHost)
-                call.respondHtml {
-                    createLinkSite()
-                }
+                call.respondHtml(MainPage::create)
             }
             // create_url is called when form is complete to create new small url
             get("/create_url") {
@@ -49,7 +49,9 @@ suspend fun createUrl(call: ApplicationCall) {
     val customUrl = call.parameters["custom"]?.let { if (it.isBlank()) null else it }
     // Check if url is null or blank. If it is redirect to main page with error "Missing URL!"
     if (url.isNullOrBlank()) {
-        call.respondHtml { createLinkSite("Missing URL!") }
+        call.respondHtml {
+            MainPage.create(this, "Missing URL!")
+        }
         return
     }
     // Ensure the url starts with http:// or https:// so redirects work correctly
@@ -58,7 +60,7 @@ suspend fun createUrl(call: ApplicationCall) {
     }
     // Check if custom url has already been created. If so redirect with error message
     if (customUrl != null && UrlDatabase.doesUrlExist(customUrl)) {
-        call.respondHtml { createLinkSite("Custom url has already been chosen. Try again!") }
+        call.respondHtml(MainPage::create)
         return
     }
     // Create blank entry for url we're about to create
@@ -67,7 +69,9 @@ suspend fun createUrl(call: ApplicationCall) {
     val key = customUrl ?: UrlEncoderUtil.encode(id)
     // Since we need the id to create the key we now have to update the database
     UrlDatabase.updateUrl(id, key, url)
-    call.respondHtml { createLinkSite("Created url: ${call.request.host()}/$key") }
+    call.respondHtml {
+        MainPage.create(this, "Created url: ${call.request.host()}/$key")
+    }
 }
 
 /**
@@ -77,41 +81,21 @@ suspend fun handleUnknownLink(call: ApplicationCall) {
     val uri = call.request.document()
     // Check if url exists. If not simply redirect to main page
     if (!UrlDatabase.doesUrlExist(uri)) {
-        call.respondHtml { createLinkSite() }
+        call.respondHtml {
+            MainPage.create(this)
+        }
         return
     }
     val url = UrlDatabase.getUrl(uri)
     if (url == null) {
-        call.respondHtml { createLinkSite("Internal error fetching url!") }
+        call.respondHtml {
+            MainPage.create(this, "Internal error fetching url!")
+        }
         error("Null url found in database for key $uri")
     }
     call.respondRedirect(url.url)
 }
 
-/**
- * Create a plain website with input to create small url
- * @param error Used to display error message on main page. Leave null for none (default)
- */
-fun HTML.createLinkSite(error: String? = null) {
-    body {
-        if (error != null) {
-            p {
-                +error
-            }
-        }
-
-        form("/create_url", encType = FormEncType.multipartFormData, method = FormMethod.get) {
-            acceptCharset = "utf-8"
-
-            p {
-                label { +"Enter URL: " }
-                textInput { name = "url" }
-                submitInput { value = "send" }
-            }
-            p {
-                label { +"(Optional) Custom URL: " }
-                textInput { name = "custom" }
-            }
-        }
-    }
+suspend fun ApplicationCall.respondHtml(block: HTML.() -> Unit) {
+    this.respondHtml(HttpStatusCode.OK, block)
 }

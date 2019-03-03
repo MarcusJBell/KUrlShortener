@@ -4,11 +4,11 @@ import io.ktor.application.ApplicationCall
 import io.ktor.request.host
 import kotlinx.html.*
 
-/**
- * Create a plain website with input to create small url
- * @param error Used to display error message on main page. Leave null for none (default)
- */
 object MainPage {
+    /**
+     * Create a plain website with input to create small url
+     * @param message Used to display error message on main page. Leave null for none (default)
+     */
     fun create(call: ApplicationCall, html: HTML, message: String? = "") {
         with(html) {
             head {

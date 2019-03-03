@@ -1,0 +1,43 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.3.21'
+}
+
+group 'urlshortner'
+version '0.1'
+
+apply plugin: 'application'
+mainClassName = "urlshortner.UrlShortnerKt"
+
+sourceSets {
+    main.kotlin.srcDirs = [ 'src/main/kotlin' ]
+    main.resources.srcDirs = [ 'src/main/resources' ]
+}
+
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
+dependencies {
+    ext.ktor_version = '1.1.3'
+    
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    compile group: 'org.jetbrains.kotlinx', name: 'kotlinx.html', version: '0.5.12', ext: 'pom'
+
+    compile "io.ktor:ktor-server-netty:$ktor_version"
+    compile "io.ktor:ktor-html-builder:$ktor_version"
+    compile "org.jetbrains.exposed:exposed:0.12.2"
+    
+    compile "org.xerial:sqlite-jdbc:3.25.2"
+
+//    compile 'org.apache.logging.log4j:log4j-api:2.11.2'
+    compile group: 'org.slf4j', name: 'slf4j-simple', version: '1.8.0-beta4'
+
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}

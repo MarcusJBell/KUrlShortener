@@ -29,7 +29,9 @@ fun main() {
             // On / just direct to main page
             get("/") {
                 println(call.request.origin.remoteHost)
-                call.respondHtml(MainPage::create)
+                call.respondHtml {
+                    MainPage.create(call, this)
+                }
             }
             get("/style.css") {
                 val reader = BufferedReader(InputStreamReader(ClassLoader.getSystemClassLoader().getResourceAsStream("style.css")))
@@ -60,7 +62,7 @@ suspend fun createUrl(call: ApplicationCall) {
     // Check if url is null or blank. If it is redirect to main page with error "Missing URL!"
     if (url.isNullOrBlank()) {
         call.respondHtml {
-            MainPage.create(this, "Missing URL!")
+            MainPage.create(call,this, "Missing URL!")
         }
         return
     }
@@ -71,7 +73,7 @@ suspend fun createUrl(call: ApplicationCall) {
     // Check if custom url has already been created. If so redirect with error message
     if (customUrl != null && UrlDatabase.doesUrlExist(customUrl)) {
         call.respondHtml {
-            MainPage.create(this, "Custom url '$customUrl' already exists! Try something else!")
+            MainPage.create(call,this, "Custom url '$customUrl' already exists! Try something else!")
         }
         return
     }
@@ -82,7 +84,7 @@ suspend fun createUrl(call: ApplicationCall) {
     // Since we need the id to create the key we now have to update the database
     UrlDatabase.updateUrl(id, key, url)
     call.respondHtml {
-        MainPage.create(this, "Created url: ${call.request.host()}/$key")
+        MainPage.create(call, this, "Created url: ${call.request.host()}/$key")
     }
 }
 
@@ -94,14 +96,14 @@ suspend fun handleUnknownLink(call: ApplicationCall) {
     // Check if url exists. If not simply redirect to main page
     if (!UrlDatabase.doesUrlExist(uri)) {
         call.respondHtml {
-            MainPage.create(this)
+            MainPage.create(call, this)
         }
         return
     }
     val url = UrlDatabase.getUrl(uri)
     if (url == null) {
         call.respondHtml {
-            MainPage.create(this, "Internal error fetching url!")
+            MainPage.create(call, this, "Internal error fetching url!")
         }
         error("Null url found in database for key $uri")
     }

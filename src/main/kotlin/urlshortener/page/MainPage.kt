@@ -1,5 +1,7 @@
 package urlshortener.page
 
+import io.ktor.application.ApplicationCall
+import io.ktor.request.host
 import kotlinx.html.*
 
 /**
@@ -7,11 +9,7 @@ import kotlinx.html.*
  * @param error Used to display error message on main page. Leave null for none (default)
  */
 object MainPage {
-    fun create(html: HTML) {
-        MainPage.create(html, null)
-    }
-
-    fun create(html: HTML, message: String?) {
+    fun create(call: ApplicationCall, html: HTML, message: String? = "") {
         with(html) {
             head {
                 link(rel = "stylesheet", href = "/style.css", type = "text/css")
@@ -43,7 +41,7 @@ object MainPage {
 
                         // Custom link field
                         p {
-                            label { +"Custom URL" }
+                            label { +"${call.request.host()}/" }
                             textInput {
                                 name = "custom"
                                 id = "custom"

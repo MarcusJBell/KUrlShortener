@@ -2,11 +2,11 @@ plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.3.21'
 }
 
-group 'urlshortner'
+group 'urlshortener'
 version '0.1'
 
 apply plugin: 'application'
-mainClassName = "urlshortner.UrlShortnerKt"
+mainClassName = "urlshortener.UrlshortenerKt"
 
 sourceSets {
     main.kotlin.srcDirs = [ 'src/main/kotlin' ]

@@ -1,4 +1,4 @@
-package urlshortner
+package urlshortener
 
 /**
  * Util class used to convert database id's to keys and back
